@@ -74,32 +74,14 @@ SOFTWARE.
     margin-top: -80px;
 }
 
-.spidertron-body-wrapper {
+.spidertron-body {
     position: absolute;
     top: var(--spidertron-body-height);
     left: 0px;
-}
-
-.spidertron-body {
-    position: absolute;
-    top: 0px;
-    left: 0px;
 
     width: 132px;
-    height: 138px;
+    height: 160px;
     background-image: url(https://spidertron.alt-f4.blog/assets-small/torso/hr-spidertron-body.png);
-
-    z-index: 451;
-}
-
-.spidertron-body-bottom {
-    position: absolute;
-    top: 54px;
-    left: 4px;
-
-    width: 126px;
-    height: 106px;
-    background-image: url(https://spidertron.alt-f4.blog/assets/torso/hr-spidertron-body-bottom.png);
 
     z-index: 450;
 }
