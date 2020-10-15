@@ -39,11 +39,6 @@ const legConnectionCoordinates = [
     {x: 34, y: 142}
 ];
 
-const legLengthAdjustment = {
-    upperLength: 37,
-    lowerLength: 72
-}
-
 const zOffsets = {
     ground: 0,
     footUp: 20,
@@ -63,6 +58,7 @@ const restingLegPositions = [
 ];
 
 const framePeriod = 1000 / 60; // 60 fps
+const maxSpidertronSpeed = 200; // Pixels per second
 const legStepInterval = 80; // ms
 const activeLegCount = 2;
 const stepRandomness = 30;
@@ -109,7 +105,7 @@ function buildSpidertron(baseElement) {
         targetY: 0,
         scale: baseElement.dataset.spidertronScale || 1.0,
         speed: 0,
-        maxSpeed: 200, // Pixels per second
+        maxSpeed: maxSpidertronSpeed,
         activeLeg: 0,
         nextActiveLeg: 0,
         legs: []
@@ -297,10 +293,10 @@ function updateSpidertron(spidertron, time) {
         let lowerAngle = Math.atan2(-lowerDeltaX, lowerDeltaY);
 
         spidertron.legs[i].upperElement.style.setProperty('--leg-upper-angle', upperAngle + 'rad');
-        spidertron.legs[i].upperElement.style.setProperty('--leg-upper-length', Math.max(0, upperLength - legLengthAdjustment.upperLength) + 'px');
+        spidertron.legs[i].upperElement.style.setProperty('--leg-upper-length', upperLength + 'px');
 
         spidertron.legs[i].lowerElement.style.setProperty('--leg-lower-angle', (lowerAngle - upperAngle) + 'rad');
-        spidertron.legs[i].lowerElement.style.setProperty('--leg-lower-length', Math.max(0, lowerLength - legLengthAdjustment.lowerLength) + 'px');
+        spidertron.legs[i].lowerElement.style.setProperty('--leg-lower-length', lowerLength + 'px');
 
         spidertron.legs[i].kneeElement.style.setProperty('--knee-angle', -((lowerAngle + upperAngle) / 2) + 'rad');
     }

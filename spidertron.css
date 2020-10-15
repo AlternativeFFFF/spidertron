@@ -147,9 +147,9 @@ SOFTWARE.
     position: absolute;
     top: 16px;
     left: -17px;
+    bottom: 21px;
 
     width: 30px;
-    height: 100%;
 
     background-image: url(https://spidertron.alt-f4.blog/assets/legs/hr-spidertron-legs-upper-stretchable.png);
     background-size: 800% 200%;
@@ -159,8 +159,8 @@ SOFTWARE.
 
 .spidertron-leg-upper-end-b {
     position: absolute;
-    bottom: -45px;
     left: -18px;
+    bottom: -13px;
 
     width: 38px;
     height: 58px;
@@ -205,7 +205,7 @@ SOFTWARE.
 
 .spidertron-leg-knee {
     position: absolute;
-    bottom: -51px;
+    bottom: -19px;
     left: -11px;
 
     width: 22px;
@@ -246,7 +246,7 @@ SOFTWARE.
 
 .spidertron-leg-lower-wrapper {
     position: absolute;
-    bottom: -37px;
+    bottom: 0px;
     left: 0px;
 
     width: 0px;
@@ -310,9 +310,9 @@ SOFTWARE.
     position: absolute;
     top: 25px;
     left: -13px;
+    bottom: 47px;
 
     width: 25px;
-    height: 100%;
 
     background-image: url(https://spidertron.alt-f4.blog/assets/legs/hr-spidertron-legs-lower-stretchable.png);
     background-size: 800% 200%;
@@ -322,7 +322,7 @@ SOFTWARE.
 
 .spidertron-leg-lower-end-b {
     position: absolute;
-    bottom: -75px;
+    bottom: -3px;
     left: -18px;
 
     width: 34px;
