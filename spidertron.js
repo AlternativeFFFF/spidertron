@@ -59,8 +59,8 @@ const restingLegPositions = [
 
 const framePeriod = 1000 / 60; // 60 fps
 const maxSpidertronSpeed = 100; // Pixels per second
-const legStepInterval = 80; // ms
-const activeLegCount = 2;
+const legStepInterval = 100; // ms
+const activeLegCount = 3;
 const stepRandomness = 20;
 
 var spidertrons = [];
@@ -105,12 +105,11 @@ function buildSpidertron(baseElement) {
         targetY: 0,
         scale: baseElement.dataset.spidertronScale || 1.0,
         speed: 0,
-        maxSpeed: maxSpidertronSpeed,
+        maxSpeed: baseElement.dataset.spidertronSpeed || maxSpidertronSpeed,
         activeLeg: 0,
         nextActiveLeg: 0,
         legs: []
     };
-    spidertron.maxSpeed *= spidertron.scale;
 
     let spidertronBody = document.createElement('div');
     spidertronBody.className = 'spidertron-body';
@@ -267,12 +266,11 @@ function updateSpidertron(spidertron, time) {
     }
 
     // Update sprites
-    spidertron.baseElement.style.setProperty('--spidertron-location-x', spidertron.currentX + 'px');
-    spidertron.baseElement.style.setProperty('--spidertron-location-y', spidertron.currentY + 'px');
-
-    let bodyHeight = zOffsets.bodyHeight + Math.sin(time / 130) * 2;
-    spidertron.baseElement.style.setProperty('--spidertron-body-height', (-bodyHeight) + 'px');
-    spidertron.baseElement.style.setProperty('--spidertron-scale', spidertron.scale);
+    let bodyHeight = Math.round(zOffsets.bodyHeight + Math.sin(time / 130) * 2);
+    spidertron.baseElement.style.cssText = '--spidertron-location-x:' + Math.round(spidertron.currentX) + 'px;' +
+                                           '--spidertron-location-y:' + Math.round(spidertron.currentY) + 'px;' +
+                                           '--spidertron-body-height:' + (-bodyHeight) + 'px;' +
+                                           '--spidertron-scale:' + spidertron.scale;
 
     for (let i = 0; i < spidertron.legs.length; i++) {
         let N = spidertron.legs[i].index;
@@ -292,13 +290,11 @@ function updateSpidertron(spidertron, time) {
         let lowerLength = Math.sqrt(lowerDeltaX * lowerDeltaX + lowerDeltaY * lowerDeltaY);
         let lowerAngle = Math.atan2(-lowerDeltaX, lowerDeltaY);
 
-        spidertron.legs[i].upperElement.style.setProperty('--leg-upper-angle', upperAngle + 'rad');
-        spidertron.legs[i].upperElement.style.setProperty('--leg-upper-length', upperLength + 'px');
-
-        spidertron.legs[i].lowerElement.style.setProperty('--leg-lower-angle', (lowerAngle - upperAngle) + 'rad');
-        spidertron.legs[i].lowerElement.style.setProperty('--leg-lower-length', lowerLength + 'px');
-
-        spidertron.legs[i].kneeElement.style.setProperty('--knee-angle', -((lowerAngle + upperAngle) / 2) + 'rad');
+        spidertron.legs[i].upperElement.style.cssText = '--leg-upper-angle:' + upperAngle + 'rad;' +
+                                                        '--leg-upper-length:' + upperLength + 'px;' +
+                                                        '--leg-lower-angle:' + (lowerAngle - upperAngle) + 'rad;' +
+                                                        '--leg-lower-length:' + lowerLength + 'px;' +
+                                                        '--knee-angle:' + -((lowerAngle + upperAngle) / 2) + 'rad;';
     }
 }
 
