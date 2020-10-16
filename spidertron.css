@@ -30,14 +30,14 @@ SOFTWARE.
 
 :root {
     --leg-upper-angle: 0deg;
-    --leg-upper-length: 50px;
+    --leg-upper-length: 25px;
     --leg-lower-angle: 0deg;
-    --leg-lower-length: 100px;
+    --leg-lower-length: 50px;
     --knee-angle: 0deg;
-    --spidertron-body-height: 130px;
+    --spidertron-body-height: -55px;
     --spidertron-location-x: 0px;
     --spidertron-location-y: 0px;
-    --spidertron-scale: 50%;
+    --spidertron-scale: 100%;
 }
 
 .spidertron-active-mask {
