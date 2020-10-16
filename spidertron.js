@@ -29,39 +29,39 @@ SOFTWARE.
 */
 
 const legConnectionCoordinates = [
-    {x: 98, y: 62},
-    {x: 114, y: 84},
-    {x: 120, y: 115},
-    {x: 98, y: 142},
-    {x: 34, y: 62},
-    {x: 18, y: 84},
-    {x: 13, y: 115},
-    {x: 34, y: 142}
+    {x: 49, y: 31},
+    {x: 57, y: 42},
+    {x: 60, y: 57},
+    {x: 49, y: 71},
+    {x: 17, y: 31},
+    {x: 9, y: 42},
+    {x: 6, y: 57},
+    {x: 17, y: 71}
 ];
 
 const zOffsets = {
     ground: 0,
-    footUp: 20,
-    bodyHeight: 110,
-    legJoints: 240
+    footUp: 10,
+    bodyHeight: 55,
+    legJoints: 120
 };
 
 const restingLegPositions = [
-    {x: 120, y: -130},
-    {x: 160, y: -50},
-    {x: 160, y: 50},
-    {x: 120, y: 130},
-    {x: -120, y: -130},
-    {x: -160, y: -50},
-    {x: -160, y: 50},
-    {x: -120, y: 130}
+    {x: 60, y: -65},
+    {x: 80, y: -25},
+    {x: 80, y: 25},
+    {x: 60, y: 65},
+    {x: -60, y: -65},
+    {x: -80, y: -25},
+    {x: -80, y: 25},
+    {x: -60, y: 65}
 ];
 
 const framePeriod = 1000 / 60; // 60 fps
-const maxSpidertronSpeed = 200; // Pixels per second
+const maxSpidertronSpeed = 100; // Pixels per second
 const legStepInterval = 80; // ms
 const activeLegCount = 2;
-const stepRandomness = 30;
+const stepRandomness = 20;
 
 var spidertrons = [];
 
@@ -270,7 +270,7 @@ function updateSpidertron(spidertron, time) {
     spidertron.baseElement.style.setProperty('--spidertron-location-x', spidertron.currentX + 'px');
     spidertron.baseElement.style.setProperty('--spidertron-location-y', spidertron.currentY + 'px');
 
-    let bodyHeight = zOffsets.bodyHeight + Math.sin(time / 130) * 4;
+    let bodyHeight = zOffsets.bodyHeight + Math.sin(time / 130) * 2;
     spidertron.baseElement.style.setProperty('--spidertron-body-height', (-bodyHeight) + 'px');
     spidertron.baseElement.style.setProperty('--spidertron-scale', spidertron.scale);
 
