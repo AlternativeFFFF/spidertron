@@ -58,38 +58,33 @@ const restingLegPositions = [
 ];
 
 const framePeriod = 1000 / 60; // 60 fps
-const maxSpidertronSpeed = 100; // Pixels per second
-const legStepInterval = 80; // ms
-const activeLegCount = 2;
+const maxSpidertronSpeed = 150; // Pixels per second
+const legStepInterval = 150; // ms
+const activeLegCount = 3;
 const stepRandomness = 20;
 
 var spidertrons = [];
 
-// Sort legs by distance from target and alternate closest/furthest
+// Sort legs by their distance from axis of movement
 function sortLegOrder(spidertron) {
+    var centerDeltaX = spidertron.targetX - spidertron.currentX;
+    var centerDeltaY = spidertron.targetY - spidertron.currentY;
+
     spidertron.legs.sort((a, b) => {
         let aDeltaX = spidertron.targetX - a.currentX;
         let aDeltaY = spidertron.targetY - a.currentY;
+        let aDist = Math.sqrt(aDeltaX * aDeltaX + aDeltaY * aDeltaY);
 
-        let aDistSquared = aDeltaX * aDeltaX + aDeltaY * aDeltaY;
+        let aDotCenter = aDeltaX * centerDeltaX + aDeltaY * centerDeltaY;
 
         let bDeltaX = spidertron.targetX - b.currentX;
         let bDeltaY = spidertron.targetY - b.currentY;
+        let bDist = Math.sqrt(bDeltaX * bDeltaX + bDeltaY * bDeltaY);
 
-        let bDistSquared = bDeltaX * bDeltaX + bDeltaY * bDeltaY;
+        let bDotCenter = bDeltaX * centerDeltaX + bDeltaY * centerDeltaY;
 
-        return aDistSquared > bDistSquared;
+        return aDotCenter / aDist > bDotCenter / bDist;
     });
-    spidertron.legs = [
-        spidertron.legs[0],
-        spidertron.legs[7],
-        spidertron.legs[1],
-        spidertron.legs[6],
-        spidertron.legs[2],
-        spidertron.legs[5],
-        spidertron.legs[3],
-        spidertron.legs[4]
-    ];
 
     // Reset active leg so the next iteration starts with the right leg
     spidertron.activeLeg = spidertron.legs.length - 1;
@@ -201,7 +196,7 @@ function updateSpidertron(spidertron, time) {
     let targetDeltaY = spidertron.targetY - spidertron.currentY;
 
     // Calculate spidertron speed with an ease-in-out transition
-    let targetDistance = Math.round(Math.sqrt(targetDeltaX * targetDeltaX + targetDeltaY * targetDeltaY));
+    let targetDistance = Math.sqrt(targetDeltaX * targetDeltaX + targetDeltaY * targetDeltaY);
     if (targetDistance > spidertron.speed) {
         spidertron.speed += spidertron.maxSpeed / framePeriod;
     } else {
@@ -244,7 +239,7 @@ function updateSpidertron(spidertron, time) {
             spidertron.legs[i].targetY = restingLegPositions[N].y * spidertron.scale + spidertron.currentY;
             // Add extrapolated spidertron position
             let msUntilNextStep = legStepInterval / activeLegCount * spidertron.legs.length;
-            let deltaScale = (targetDistance > spidertron.speed ? spidertron.maxSpeed : spidertron.speed) / framePeriod / targetDistance / 2;
+            let deltaScale = (targetDistance > spidertron.speed ? spidertron.maxSpeed : spidertron.speed) / framePeriod / targetDistance * 2 / 3;
             spidertron.legs[i].targetX += targetDeltaX * deltaScale * msUntilNextStep / framePeriod;
             spidertron.legs[i].targetY += targetDeltaY * deltaScale * msUntilNextStep / framePeriod;
             // Add some randomness
@@ -368,6 +363,7 @@ window.onload = function() {
                 let spidertronRect = selectedSpidertron.baseElement.getBoundingClientRect();
                 selectedSpidertron.targetX = spidertronRect.x - selectedSpidertron.boundingBox.x - selectedSpidertron.currentX + homeRect.x;
                 selectedSpidertron.targetY = spidertronRect.y - selectedSpidertron.boundingBox.y - selectedSpidertron.currentY + homeRect.y;
+                sortLegOrder(selectedSpidertron);
                 selectedSpidertron = null;
                 document.body.removeChild(maskElement);
             } else {
