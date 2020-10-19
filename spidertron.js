@@ -41,54 +41,28 @@ const legConnectionCoordinates = [
 
 const zOffsets = {
     ground: 0,
-    footUp: 4,
-    bodyHeight: 40,
+    footUp: 5,
+    bodyHeight: 35,
     legJoints: 105
 };
 
 const restingLegPositions = [
-    {x: 75, y: -100},
-    {x: 100, y: -45},
-    {x: 100, y: 25},
-    {x: 75, y: 75},
-    {x: -75, y: -100},
-    {x: -100, y: -45},
-    {x: -100, y: 25},
-    {x: -75, y: 75}
+    {x: 75, y: -90},
+    {x: 100, y: -35},
+    {x: 100, y: 35},
+    {x: 75, y: 90},
+    {x: -75, y: -90},
+    {x: -100, y: -35},
+    {x: -100, y: 35},
+    {x: -75, y: 90}
 ];
 
-const framePeriod = 1000 / 60; // 60 fps
-const maxSpidertronSpeed = 150; // Pixels per second
-const legStepInterval = 150; // ms
+const maxSpidertronSpeed = 400; // Pixels per second
+const legStepInterval = 100; // ms
 const activeLegCount = 3;
 const stepRandomness = 20;
 
 var spidertrons = [];
-
-// Sort legs by their distance from axis of movement
-function sortLegOrder(spidertron) {
-    var centerDeltaX = spidertron.targetX - spidertron.currentX;
-    var centerDeltaY = spidertron.targetY - spidertron.currentY;
-
-    spidertron.legs.sort((a, b) => {
-        let aDeltaX = spidertron.targetX - a.currentX;
-        let aDeltaY = spidertron.targetY - a.currentY;
-        let aDist = Math.sqrt(aDeltaX * aDeltaX + aDeltaY * aDeltaY);
-
-        let aDotCenter = aDeltaX * centerDeltaX + aDeltaY * centerDeltaY;
-
-        let bDeltaX = spidertron.targetX - b.currentX;
-        let bDeltaY = spidertron.targetY - b.currentY;
-        let bDist = Math.sqrt(bDeltaX * bDeltaX + bDeltaY * bDeltaY);
-
-        let bDotCenter = bDeltaX * centerDeltaX + bDeltaY * centerDeltaY;
-
-        return aDotCenter / aDist > bDotCenter / bDist;
-    });
-
-    // Reset active leg so the next iteration starts with the right leg
-    spidertron.activeLeg = spidertron.legs.length - 1;
-}
 
 function buildSpidertron(homeElement) {
     let spidertronBase = document.createElement('div');
@@ -100,13 +74,17 @@ function buildSpidertron(homeElement) {
         homeElement: homeElement,
         baseElement: spidertronBase,
         active: false,
+        lastUpdate: 0,
+        moveStartTime: 0,
+        moveDuration: 0,
+        startX: homeRect.x,
+        startY: homeRect.y,
         currentX: homeRect.x,
         currentY: homeRect.y,
         targetX: homeRect.x,
         targetY: homeRect.y,
         boundingBox: {x: 0, y: 0, width: 0, height: 0},
         scale: homeElement.dataset.spidertronScale || 1.0,
-        speed: 0,
         maxSpeed: homeElement.dataset.spidertronSpeed || maxSpidertronSpeed,
         activeLeg: 0,
         nextActiveLeg: 0,
@@ -174,8 +152,9 @@ function buildSpidertron(homeElement) {
         spidertron.legs.push({
             index: N,
             active: false,
-            stepTime: 0,
-            stepHeight: 0,
+            stepStartTime: 0,
+            startX: legX,
+            startY: legY,
             currentX: legX,
             currentY: legY,
             targetX: legX,
@@ -191,82 +170,98 @@ function buildSpidertron(homeElement) {
     return spidertron;
 }
 
-function updateSpidertron(spidertron, time) {
-    let targetDeltaX = spidertron.targetX - spidertron.currentX;
-    let targetDeltaY = spidertron.targetY - spidertron.currentY;
+function setSpidertronTarget(spidertron, targetX, targetY) {
+    spidertron.startX = spidertron.currentX;
+    spidertron.startY = spidertron.currentY;
+    spidertron.targetX = targetX;
+    spidertron.targetY = targetY;
 
-    // Calculate spidertron speed with an ease-in-out transition
+    var targetDeltaX = spidertron.targetX - spidertron.currentX;
+    var targetDeltaY = spidertron.targetY - spidertron.currentY;
     let targetDistance = Math.sqrt(targetDeltaX * targetDeltaX + targetDeltaY * targetDeltaY);
-    if (targetDistance > spidertron.speed) {
-        spidertron.speed += spidertron.maxSpeed / framePeriod;
-    } else {
-        spidertron.speed = targetDistance;
-    }
-    spidertron.speed = Math.max(0, Math.min(spidertron.speed, spidertron.maxSpeed));
 
-    // Move spidertron towards target
-    let spidertronDeltaX = 0;
-    let spidertronDeltaY = 0;
-    if (targetDistance > 0) {
-        spidertronDeltaX = targetDeltaX / targetDistance * spidertron.speed / framePeriod;
-        spidertronDeltaY = targetDeltaY / targetDistance * spidertron.speed / framePeriod;
-        if (Math.abs(spidertronDeltaX) > Math.abs(targetDeltaX)) {
-            spidertronDeltaX = targetDeltaX;
-        }
-        if (Math.abs(spidertronDeltaY) > Math.abs(targetDeltaY)) {
-            spidertronDeltaY = targetDeltaY;
-        }
-        spidertron.currentX += spidertronDeltaX;
-        spidertron.currentY += spidertronDeltaY;
-    }
+    spidertron.moveStartTime = spidertron.lastUpdate;
+    spidertron.moveDuration = targetDistance / spidertron.maxSpeed * 1000;
 
-    // Update leg target positions
-    if (time >= spidertron.nextActiveLeg) {
-        spidertron.activeLeg++;
-        if (spidertron.activeLeg >= spidertron.legs.length) {
-            spidertron.activeLeg = 0;
-        }
-
-        spidertron.nextActiveLeg = time + legStepInterval / activeLegCount
-        let i = spidertron.activeLeg;
-
-        spidertron.legs[i].active = true;
-        spidertron.legs[i].stepTime = time;
-
-        let N = spidertron.legs[i].index;
-        if (targetDistance >= spidertron.maxSpeed * spidertron.scale) {
-            spidertron.legs[i].targetX = restingLegPositions[N].x * spidertron.scale + spidertron.currentX;
-            spidertron.legs[i].targetY = restingLegPositions[N].y * spidertron.scale + spidertron.currentY;
-            // Add extrapolated spidertron position
-            let msUntilNextStep = legStepInterval / activeLegCount * spidertron.legs.length;
-            let deltaScale = (targetDistance > spidertron.speed ? spidertron.maxSpeed : spidertron.speed) / framePeriod / targetDistance * 2 / 3;
-            spidertron.legs[i].targetX += targetDeltaX * deltaScale * msUntilNextStep / framePeriod;
-            spidertron.legs[i].targetY += targetDeltaY * deltaScale * msUntilNextStep / framePeriod;
-            // Add some randomness
-            spidertron.legs[i].targetX += Math.random() * stepRandomness * spidertron.scale;
-            spidertron.legs[i].targetY += Math.random() * stepRandomness * spidertron.scale;
-        } else {
-            spidertron.legs[i].targetX = restingLegPositions[N].x * spidertron.scale + spidertron.targetX;
-            spidertron.legs[i].targetY = restingLegPositions[N].y * spidertron.scale + spidertron.targetY;
-        }
-    }
-
+    // Stop any current leg movement before changing direction.
     for (let i = 0; i < spidertron.legs.length; i++) {
-        if (spidertron.legs[i].active) {
-            let legDeltaX = spidertron.legs[i].targetX - spidertron.legs[i].currentX;
-            let legDeltaY = spidertron.legs[i].targetY - spidertron.legs[i].currentY;
-            if ((legDeltaX * legDeltaX + legDeltaY * legDeltaY) > 10) {
-                let remainingTime = Math.max(0, spidertron.legs[i].stepTime + legStepInterval - time);
-                if (remainingTime > framePeriod) {
-                    spidertron.legs[i].currentX += legDeltaX * framePeriod / remainingTime;
-                    spidertron.legs[i].currentY += legDeltaY * framePeriod / remainingTime;
+        spidertron.legs[i].targetX = spidertron.legs[i].currentX;
+        spidertron.legs[i].targetY = spidertron.legs[i].currentY;
+    }
+
+    // Sort legs by their distance from axis of movement
+    spidertron.legs.sort((a, b) => {
+        let aDeltaX = spidertron.targetX - a.currentX;
+        let aDeltaY = spidertron.targetY - a.currentY;
+        let aDist = Math.sqrt(aDeltaX * aDeltaX + aDeltaY * aDeltaY);
+
+        let aDotCenter = aDeltaX * targetDeltaX + aDeltaY * targetDeltaY;
+
+        let bDeltaX = spidertron.targetX - b.currentX;
+        let bDeltaY = spidertron.targetY - b.currentY;
+        let bDist = Math.sqrt(bDeltaX * bDeltaX + bDeltaY * bDeltaY);
+
+        let bDotCenter = bDeltaX * targetDeltaX + bDeltaY * targetDeltaY;
+
+        return aDotCenter / aDist < bDotCenter / bDist;
+    });
+}
+
+function updateSpidertron(spidertron, time) {
+    // Move spidertron towards target
+    if (spidertron.moveDuration > 0) {
+        let elapsedRatio = Math.min(1, Math.max(0, (time - spidertron.moveStartTime) / spidertron.moveDuration));
+        spidertron.currentX = spidertron.startX + (spidertron.targetX - spidertron.startX) * elapsedRatio;
+        spidertron.currentY = spidertron.startY + (spidertron.targetY - spidertron.startY) * elapsedRatio;
+
+        // Activate the next leg and set a new target position
+        if (time >= spidertron.nextActiveLeg) {
+            spidertron.activeLeg++;
+            if (spidertron.activeLeg >= spidertron.legs.length) {
+                spidertron.activeLeg = 0;
+            }
+
+            spidertron.nextActiveLeg = time + legStepInterval / activeLegCount
+            let i = spidertron.activeLeg;
+            let N = spidertron.legs[i].index;
+
+            // Predict where spidertron will be at the next start of the next step
+            let msUntilNextStep = legStepInterval / activeLegCount * spidertron.legs.length;
+            let predictedElapsedRatio = Math.min(1, Math.max(0, (time + msUntilNextStep - spidertron.moveStartTime) / spidertron.moveDuration));
+            let predictedX = spidertron.startX + (spidertron.targetX - spidertron.startX) * predictedElapsedRatio;
+            let predictedY = spidertron.startY + (spidertron.targetY - spidertron.startY) * predictedElapsedRatio;
+
+            spidertron.legs[i].stepStartTime = time;
+            spidertron.legs[i].startX = spidertron.legs[i].currentX;
+            spidertron.legs[i].startY = spidertron.legs[i].currentY;
+            if (predictedElapsedRatio < 1) {
+                spidertron.legs[i].targetX = restingLegPositions[N].x * spidertron.scale + predictedX;
+                spidertron.legs[i].targetY = restingLegPositions[N].y * spidertron.scale + predictedY;
+                // Add some randomness
+                spidertron.legs[i].targetX += Math.random() * stepRandomness * spidertron.scale;
+                spidertron.legs[i].targetY += Math.random() * stepRandomness * spidertron.scale;
+            } else {
+                spidertron.legs[i].targetX = restingLegPositions[N].x * spidertron.scale + spidertron.targetX;
+                spidertron.legs[i].targetY = restingLegPositions[N].y * spidertron.scale + spidertron.targetY;
+            }
+
+            if (spidertron.legs[i].currentX != spidertron.legs[i].targetX || spidertron.legs[i].currentY != spidertron.legs[i].targetY) {
+                spidertron.legs[i].active = true;
+            }
+        }
+
+        // Advance active legs toward targets
+        for (let i = 0; i < spidertron.legs.length; i++) {
+            if (spidertron.legs[i].active) {
+                let stepElapsedRatio = Math.min(1, Math.max(0, (time - spidertron.legs[i].stepStartTime) / legStepInterval));
+                if (stepElapsedRatio < 1) {
+                    spidertron.legs[i].currentX = spidertron.legs[i].startX + (spidertron.legs[i].targetX - spidertron.legs[i].startX) * stepElapsedRatio;
+                    spidertron.legs[i].currentY = spidertron.legs[i].startY + (spidertron.legs[i].targetY - spidertron.legs[i].startY) * stepElapsedRatio;
                 } else {
                     spidertron.legs[i].currentX = spidertron.legs[i].targetX;
                     spidertron.legs[i].currentY = spidertron.legs[i].targetY;
                     spidertron.legs[i].active = false;
                 }
-            } else {
-                spidertron.legs[i].active = false;
             }
         }
     }
@@ -280,12 +275,18 @@ function updateSpidertron(spidertron, time) {
     let minY = -bodyHeight - 80;
     let maxX = 33;
     let maxY = 0;
+    let averageX = 0;
+    let averageY = 0;
     for (let i = 0; i < spidertron.legs.length; i++) {
         minX = Math.min(spidertron.legs[i].currentX - spidertron.currentX, minX);
         minY = Math.min(spidertron.legs[i].currentY - spidertron.currentY - zOffsets.legJoints * spidertron.scale, minY);
         maxX = Math.max(spidertron.legs[i].currentX - spidertron.currentX, maxX);
         maxY = Math.max(spidertron.legs[i].currentY - spidertron.currentY, maxY);
+        averageX += spidertron.legs[i].currentX;
+        averageY += spidertron.legs[i].currentY;
     }
+    averageX /= spidertron.legs.length;
+    averageY /= spidertron.legs.length;
     const boxPadding = 20;
     spidertron.boundingBox = {
         x: minX - boxPadding,
@@ -294,10 +295,12 @@ function updateSpidertron(spidertron, time) {
         height: maxY - minY + boxPadding * 2
     };
 
+    let bodyOffsetX = averageX - spidertron.currentX;
+    let bodyOffsetY = averageY - spidertron.currentY;
     for (let i = 0; i < spidertron.legs.length; i++) {
         let N = spidertron.legs[i].index;
-        let deltaX = (spidertron.legs[i].currentX - spidertron.currentX) / spidertron.scale - legConnectionCoordinates[N].x;
-        let deltaY = (spidertron.legs[i].currentY - spidertron.currentY) / spidertron.scale - legConnectionCoordinates[N].y + bodyHeight;
+        let deltaX = (spidertron.legs[i].currentX - averageX) / spidertron.scale - legConnectionCoordinates[N].x;
+        let deltaY = (spidertron.legs[i].currentY - averageY) / spidertron.scale - legConnectionCoordinates[N].y + bodyHeight;
         if (spidertron.legs[i].active) {
             deltaY -= zOffsets.footUp;
         }
@@ -307,8 +310,8 @@ function updateSpidertron(spidertron, time) {
         let upperLength = Math.sqrt(upperDeltaX * upperDeltaX + upperDeltaY * upperDeltaY);
         let upperAngle = Math.atan2(-upperDeltaX, upperDeltaY);
 
-        cssText += '--leg' + (N + 1) + '-upper-location-x:' + (legConnectionCoordinates[N].x - spidertron.boundingBox.x / spidertron.scale) + 'px;' +
-                   '--leg' + (N + 1) + '-upper-location-y:' + (legConnectionCoordinates[N].y - bodyHeight - spidertron.boundingBox.y / spidertron.scale) + 'px;' +
+        cssText += '--leg' + (N + 1) + '-upper-location-x:' + ((bodyOffsetX - spidertron.boundingBox.x) / spidertron.scale + legConnectionCoordinates[N].x) + 'px;' +
+                   '--leg' + (N + 1) + '-upper-location-y:' + ((bodyOffsetY - spidertron.boundingBox.y) / spidertron.scale + legConnectionCoordinates[N].y - bodyHeight) + 'px;' +
                    '--leg' + (N + 1) + '-upper-angle:' + upperAngle + 'rad;' +
                    '--leg' + (N + 1) + '-upper-length:' + upperLength + 'px;';
 
@@ -317,8 +320,14 @@ function updateSpidertron(spidertron, time) {
         let lowerLength = Math.sqrt(lowerDeltaX * lowerDeltaX + lowerDeltaY * lowerDeltaY);
         let lowerAngle = Math.atan2(-lowerDeltaX, lowerDeltaY);
 
-        cssText += '--leg' + (N + 1) + '-lower-location-x:' + (spidertron.legs[i].currentX - spidertron.currentX - spidertron.boundingBox.x) / spidertron.scale + 'px;' +
-                   '--leg' + (N + 1) + '-lower-location-y:' + (spidertron.legs[i].currentY - spidertron.currentY - spidertron.boundingBox.y) / spidertron.scale + 'px;' +
+        let lowerPositionX = (spidertron.legs[i].currentX - spidertron.currentX - spidertron.boundingBox.x) / spidertron.scale;
+        let lowerPositionY = (spidertron.legs[i].currentY - spidertron.currentY - spidertron.boundingBox.y) / spidertron.scale;
+        if (spidertron.legs[i].active) {
+            lowerPositionY -= zOffsets.footUp;
+        }
+
+        cssText += '--leg' + (N + 1) + '-lower-location-x:' + lowerPositionX + 'px;' +
+                   '--leg' + (N + 1) + '-lower-location-y:' + lowerPositionY + 'px;' +
                    '--leg' + (N + 1) + '-lower-angle:' + (lowerAngle + Math.PI) + 'rad;' +
                    '--leg' + (N + 1) + '-lower-length:' + lowerLength + 'px;' +
                    '--leg' + (N + 1) + '-knee-angle:' + -((lowerAngle + upperAngle) / 2) + 'rad;';
@@ -328,10 +337,11 @@ function updateSpidertron(spidertron, time) {
                '--spidertron-location-y:' + (spidertron.currentY + spidertron.boundingBox.y) + 'px;' +
                '--spidertron-width:' + (spidertron.boundingBox.width / spidertron.scale) + 'px;' +
                '--spidertron-height:' + (spidertron.boundingBox.height / spidertron.scale) + 'px;' +
-               '--spidertron-body-x:' + (-spidertron.boundingBox.x / spidertron.scale) + 'px;' +
-               '--spidertron-body-y:' + (-bodyHeight - spidertron.boundingBox.y / spidertron.scale) + 'px;';
+               '--spidertron-body-x:' + (bodyOffsetX - spidertron.boundingBox.x) / spidertron.scale + 'px;' +
+               '--spidertron-body-y:' + ((bodyOffsetY - spidertron.boundingBox.y) / spidertron.scale - bodyHeight) + 'px;';
 
     spidertron.baseElement.style.cssText = cssText;
+    spidertron.lastUpdate = time;
 }
 
 function spidertronAnimationCallback(time) {
@@ -361,14 +371,12 @@ window.onload = function() {
             if (selectedSpidertron == targetSpidertron) {
                 let homeRect = selectedSpidertron.homeElement.getBoundingClientRect();
                 let spidertronRect = selectedSpidertron.baseElement.getBoundingClientRect();
-                selectedSpidertron.targetX = spidertronRect.x - selectedSpidertron.boundingBox.x - selectedSpidertron.currentX + homeRect.x;
-                selectedSpidertron.targetY = spidertronRect.y - selectedSpidertron.boundingBox.y - selectedSpidertron.currentY + homeRect.y;
-                sortLegOrder(selectedSpidertron);
+                setSpidertronTarget(selectedSpidertron,
+                                    spidertronRect.x - selectedSpidertron.boundingBox.x - selectedSpidertron.currentX + homeRect.x,
+                                    spidertronRect.y - selectedSpidertron.boundingBox.y - selectedSpidertron.currentY + homeRect.y);
                 selectedSpidertron = null;
                 document.body.removeChild(maskElement);
             } else {
-                targetSpidertron.targetX = targetSpidertron.currentX;
-                targetSpidertron.targetY = targetSpidertron.currentY;
                 selectedSpidertron = targetSpidertron;
                 document.body.appendChild(maskElement);
             }
@@ -381,9 +389,9 @@ window.onload = function() {
     maskElement.addEventListener('click', function(e) {
         if (selectedSpidertron != null) {
             let spidertronRect = selectedSpidertron.baseElement.getBoundingClientRect();
-            selectedSpidertron.targetX = spidertronRect.x - selectedSpidertron.boundingBox.x - selectedSpidertron.currentX + e.clientX;
-            selectedSpidertron.targetY = spidertronRect.y - selectedSpidertron.boundingBox.y - selectedSpidertron.currentY + e.clientY;
-            sortLegOrder(selectedSpidertron);
+            setSpidertronTarget(selectedSpidertron,
+                                spidertronRect.x - selectedSpidertron.boundingBox.x - selectedSpidertron.currentX + e.clientX,
+                                spidertronRect.y - selectedSpidertron.boundingBox.y - selectedSpidertron.currentY + e.clientY);
             e.preventDefault();
         }
     });
