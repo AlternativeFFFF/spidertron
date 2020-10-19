@@ -69,6 +69,10 @@ function buildSpidertron(homeElement) {
     spidertronBase.className = 'spidertron';
 
     let homeRect = homeElement.getBoundingClientRect();
+    let bodyRect = document.body.getBoundingClientRect();
+
+    let homeX = homeRect.x - bodyRect.x;
+    let homeY = homeRect.y - bodyRect.y;
 
     let spidertron = {
         homeElement: homeElement,
@@ -77,12 +81,12 @@ function buildSpidertron(homeElement) {
         lastUpdate: 0,
         moveStartTime: 0,
         moveDuration: 0,
-        startX: homeRect.x,
-        startY: homeRect.y,
-        currentX: homeRect.x,
-        currentY: homeRect.y,
-        targetX: homeRect.x,
-        targetY: homeRect.y,
+        startX: homeX,
+        startY: homeY,
+        currentX: homeX,
+        currentY: homeY,
+        targetX: homeX,
+        targetY: homeY,
         boundingBox: {x: 0, y: 0, width: 0, height: 0},
         scale: homeElement.dataset.spidertronScale || 1.0,
         maxSpeed: homeElement.dataset.spidertronSpeed || maxSpidertronSpeed,
@@ -370,10 +374,8 @@ window.onload = function() {
             targetSpidertron.active = !targetSpidertron.active;
             if (selectedSpidertron == targetSpidertron) {
                 let homeRect = selectedSpidertron.homeElement.getBoundingClientRect();
-                let spidertronRect = selectedSpidertron.baseElement.getBoundingClientRect();
-                setSpidertronTarget(selectedSpidertron,
-                                    spidertronRect.x - selectedSpidertron.boundingBox.x - selectedSpidertron.currentX + homeRect.x,
-                                    spidertronRect.y - selectedSpidertron.boundingBox.y - selectedSpidertron.currentY + homeRect.y);
+                let bodyRect = document.body.getBoundingClientRect();
+                setSpidertronTarget(selectedSpidertron, homeRect.x - bodyRect.x, homeRect.y - bodyRect.y);
                 selectedSpidertron = null;
                 document.body.removeChild(maskElement);
             } else {
@@ -388,10 +390,7 @@ window.onload = function() {
 
     maskElement.addEventListener('click', function(e) {
         if (selectedSpidertron != null) {
-            let spidertronRect = selectedSpidertron.baseElement.getBoundingClientRect();
-            setSpidertronTarget(selectedSpidertron,
-                                spidertronRect.x - selectedSpidertron.boundingBox.x - selectedSpidertron.currentX + e.clientX,
-                                spidertronRect.y - selectedSpidertron.boundingBox.y - selectedSpidertron.currentY + e.clientY);
+            setSpidertronTarget(selectedSpidertron, e.pageX, e.pageY);
             e.preventDefault();
         }
     });
