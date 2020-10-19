@@ -109,10 +109,15 @@ function buildSpidertron(homeElement) {
             continue;
         }
 
-        // <div class="spidertron-legN-lower">
+        // <div class="spidertron-legN-lower-wrapper spidertron-leg-wrapper">
+        let legLowerWrapper = document.createElement('div');
+        legLowerWrapper.className = 'spidertron-leg' + (N + 1) + '-lower-wrapper spidertron-leg-wrapper';
+        spidertronBase.appendChild(legLowerWrapper);
+
+        // <div class="spidertron-legN-lower spidertron-leg-lower">
         let legLower = document.createElement('div');
         legLower.className = 'spidertron-leg' + (N + 1) + '-lower spidertron-leg-lower';
-        spidertronBase.appendChild(legLower);
+        legLowerWrapper.appendChild(legLower);
 
         let legLowerStretchable = document.createElement('div');
         legLowerStretchable.className = 'spidertron-leg-lower-stretchable';
@@ -126,11 +131,17 @@ function buildSpidertron(homeElement) {
         legLowerEndA.className = 'spidertron-leg-lower-end-a';
         legLower.appendChild(legLowerEndA);
         // </div>
+        // </div>
 
-        // <div class="spidertron-legN-upper">
+        // <div class="spidertron-legN-upper-wrapper spidertron-leg-wrapper">
+        let legUpperWrapper = document.createElement('div');
+        legUpperWrapper.className = 'spidertron-leg' + (N + 1) + '-upper-wrapper spidertron-leg-wrapper';
+        spidertronBase.appendChild(legUpperWrapper);
+
+        // <div class="spidertron-legN-upper spidertron-leg-upper">
         let legUpper = document.createElement('div');
         legUpper.className = 'spidertron-leg' + (N + 1) + '-upper spidertron-leg-upper';
-        spidertronBase.appendChild(legUpper);
+        legUpperWrapper.appendChild(legUpper);
 
         let legUpperStretchable = document.createElement('div');
         legUpperStretchable.className = 'spidertron-leg-upper-stretchable';
@@ -144,10 +155,11 @@ function buildSpidertron(homeElement) {
         legUpperEndA.className = 'spidertron-leg-upper-end-a';
         legUpper.appendChild(legUpperEndA);
 
-        // <div class="spidertron-legN-knee">
+        // <div class="spidertron-legN-knee spidertron-leg-knee">
         let legKnee = document.createElement('div');
         legKnee.className = 'spidertron-leg' + (N + 1) + '-knee spidertron-leg-knee';
         legUpper.appendChild(legKnee);
+        // </div>
         // </div>
         // </div>
 
