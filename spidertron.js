@@ -77,7 +77,7 @@ function buildSpidertron(homeElement) {
     let spidertron = {
         homeElement: homeElement,
         baseElement: spidertronBase,
-        active: false,
+        idle: true,
         lastUpdate: 0,
         moveStartTime: 0,
         moveDuration: 0,
@@ -198,6 +198,7 @@ function setSpidertronTarget(spidertron, targetX, targetY) {
 
     spidertron.moveStartTime = spidertron.lastUpdate;
     spidertron.moveDuration = targetDistance / spidertron.maxSpeed * 1000;
+    spidertron.idle = false;
 
     // Stop any current leg movement before changing direction.
     for (let i = 0; i < spidertron.legs.length; i++) {
@@ -223,12 +224,26 @@ function setSpidertronTarget(spidertron, targetX, targetY) {
     });
 }
 
+function isSpidertronVisible(spidertron) {
+    let spidertronMinY = spidertron.boundingBox.y + spidertron.currentY;
+    if (spidertronMinY > window.pageYOffset + window.innerHeight) {
+        // Spidertron off bottom of screen
+        return false;
+    } else if (spidertronMinY + spidertron.boundingBox.height < window.pageYOffset) {
+        // Spidertron off top of screen
+        return false;
+    }
+    // Spidertron visible
+    return true;
+}
+
 function updateSpidertron(spidertron, time) {
     // Move spidertron towards target
-    if (spidertron.moveDuration > 0) {
+    if (spidertron.moveDuration > 0 && !spidertron.idle) {
         let elapsedRatio = Math.min(1, Math.max(0, (time - spidertron.moveStartTime) / spidertron.moveDuration));
         spidertron.currentX = spidertron.startX + (spidertron.targetX - spidertron.startX) * elapsedRatio;
         spidertron.currentY = spidertron.startY + (spidertron.targetY - spidertron.startY) * elapsedRatio;
+        spidertron.idle = elapsedRatio >= 1;
 
         // Activate the next leg and set a new target position
         if (time >= spidertron.nextActiveLeg) {
@@ -273,6 +288,7 @@ function updateSpidertron(spidertron, time) {
                 if (stepElapsedRatio < 1) {
                     spidertron.legs[i].currentX = spidertron.legs[i].startX + (spidertron.legs[i].targetX - spidertron.legs[i].startX) * stepElapsedRatio;
                     spidertron.legs[i].currentY = spidertron.legs[i].startY + (spidertron.legs[i].targetY - spidertron.legs[i].startY) * stepElapsedRatio;
+                    spidertron.idle = false;
                 } else {
                     spidertron.legs[i].currentX = spidertron.legs[i].targetX;
                     spidertron.legs[i].currentY = spidertron.legs[i].targetY;
@@ -280,6 +296,9 @@ function updateSpidertron(spidertron, time) {
                 }
             }
         }
+    } else if (time > 0 && spidertron.idle && !isSpidertronVisible(spidertron)) {
+        spidertron.lastUpdate = time;
+        return;
     }
 
     // Update CSS layout
@@ -383,7 +402,6 @@ window.onload = function() {
 
         spidertron.baseElement.addEventListener('click', function(e) {
             let targetSpidertron = spidertrons[e.currentTarget.dataset.spidertronIndex];
-            targetSpidertron.active = !targetSpidertron.active;
             if (selectedSpidertron == targetSpidertron) {
                 let homeRect = selectedSpidertron.homeElement.getBoundingClientRect();
                 let bodyRect = document.body.getBoundingClientRect();
@@ -392,6 +410,7 @@ window.onload = function() {
                 document.body.removeChild(maskElement);
             } else {
                 selectedSpidertron = targetSpidertron;
+                setSpidertronTarget(selectedSpidertron, selectedSpidertron.currentX, selectedSpidertron.currentY);
                 document.body.appendChild(maskElement);
             }
             e.preventDefault();
