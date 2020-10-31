@@ -76,6 +76,8 @@ function buildSpidertron(homeElement) {
 
     let spidertron = {
         homeElement: homeElement,
+        homeX: homeX,
+        homeY: homeY,
         baseElement: spidertronBase,
         idle: true,
         lastUpdate: 0,
@@ -224,6 +226,25 @@ function setSpidertronTarget(spidertron, targetX, targetY) {
     });
 }
 
+// Used when home moves on the page
+function teleportSpidertron(spidertron, deltaX, deltaY) {
+    spidertron.startX += deltaX;
+    spidertron.startY += deltaY;
+    spidertron.currentX += deltaX;
+    spidertron.currentY += deltaY;
+    spidertron.targetX += deltaX;
+    spidertron.targetY += deltaY;
+
+    for (let i = 0; i < spidertron.legs.length; i++) {
+        spidertron.legs[i].startX += deltaX;
+        spidertron.legs[i].startY += deltaY;
+        spidertron.legs[i].currentX += deltaX;
+        spidertron.legs[i].currentY += deltaY;
+        spidertron.legs[i].targetX += deltaX;
+        spidertron.legs[i].targetY += deltaY;
+    }
+}
+
 function isSpidertronVisible(spidertron) {
     let spidertronMinY = spidertron.boundingBox.y + spidertron.currentY;
     if (spidertronMinY > window.pageYOffset + window.innerHeight) {
@@ -238,8 +259,19 @@ function isSpidertronVisible(spidertron) {
 }
 
 function updateSpidertron(spidertron, time) {
+    let homeRect = spidertron.homeElement.getBoundingClientRect();
+    let bodyRect = document.body.getBoundingClientRect();
+    let homeX = homeRect.x - bodyRect.x;
+    let homeY = homeRect.y - bodyRect.y;
+
     // Move spidertron towards target
     if (spidertron.moveDuration > 0 && !spidertron.idle) {
+        // Check if the home moved, and update the target position.
+        if (homeX != spidertron.homeX || homeY != spidertron.homeY) {
+            spidertron.targetX += homeX - spidertron.homeX;
+            spidertron.targetY += homeY - spidertron.homeY;
+        }
+
         let elapsedRatio = Math.min(1, Math.max(0, (time - spidertron.moveStartTime) / spidertron.moveDuration));
         spidertron.currentX = spidertron.startX + (spidertron.targetX - spidertron.startX) * elapsedRatio;
         spidertron.currentY = spidertron.startY + (spidertron.targetY - spidertron.startY) * elapsedRatio;
@@ -296,10 +328,18 @@ function updateSpidertron(spidertron, time) {
                 }
             }
         }
-    } else if (time > 0 && spidertron.idle && !isSpidertronVisible(spidertron)) {
-        spidertron.lastUpdate = time;
-        return;
+    } else if (time > 0 && spidertron.idle) {
+        // Check if the home moved, and teleport the spidertron if it did.
+        if (homeX != spidertron.homeX || homeY != spidertron.homeY) {
+            teleportSpidertron(spidertron, homeX - spidertron.homeX, homeY - spidertron.homeY);
+        } else if (!isSpidertronVisible(spidertron)) {
+            // Skip updating spidertron's idle if it is off screen.
+            spidertron.lastUpdate = time;
+            return;
+        }
     }
+    spidertron.homeX = homeX;
+    spidertron.homeY = homeY;
 
     // Update CSS layout
     let bodyHeight = zOffsets.bodyHeight + Math.sin(time / 130) * 2;
@@ -410,7 +450,6 @@ window.onload = function() {
                 document.body.removeChild(maskElement);
             } else {
                 selectedSpidertron = targetSpidertron;
-                setSpidertronTarget(selectedSpidertron, selectedSpidertron.currentX, selectedSpidertron.currentY);
                 document.body.appendChild(maskElement);
             }
             e.preventDefault();
