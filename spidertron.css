@@ -45,15 +45,15 @@ SOFTWARE.
 
 .spidertron {
     position: absolute;
-    top: var(--spidertron-location-y);
-    left: var(--spidertron-location-x);
+    top: 0px;
+    left: 0px;
     contain: strict;
 
     width: var(--spidertron-width);
     height: var(--spidertron-height);
     /* border: 2px solid red; */
 
-    transform: scale(var(--spidertron-scale));
+    transform: translate(var(--spidertron-location-x), var(--spidertron-location-y)) scale(var(--spidertron-scale));
     transform-origin: top left;
     z-index: 200;
 
@@ -62,13 +62,15 @@ SOFTWARE.
 
 .spidertron-body {
     position: absolute;
-    left: var(--spidertron-body-x);
-    top: var(--spidertron-body-y);
+    left: 0px;
+    top: 0px;
 
     width: 66px;
     height: 80px;
     margin-left: -33px;
     margin-top: -80px;
+
+    transform: translate(var(--spidertron-body-x), var(--spidertron-body-y));
 
     background-image: url(https://media.alt-f4.blog/spidertron/spidertron-body.png);
     background-size: 100% 100%;
@@ -192,44 +194,28 @@ SOFTWARE.
 
 /* Leg CSS Variables */
 .spidertron-leg1-upper-wrapper {
-    left: var(--leg1-upper-location-x);
-    top: var(--leg1-upper-location-y);
-    transform: rotate(var(--leg1-upper-angle));
+    transform: translate(var(--leg1-upper-location-x), var(--leg1-upper-location-y)) rotate(var(--leg1-upper-angle));
 }
 .spidertron-leg2-upper-wrapper {
-    left: var(--leg2-upper-location-x);
-    top: var(--leg2-upper-location-y);
-    transform: rotate(var(--leg2-upper-angle));
+    transform: translate(var(--leg2-upper-location-x), var(--leg2-upper-location-y)) rotate(var(--leg2-upper-angle));
 }
 .spidertron-leg3-upper-wrapper {
-    left: var(--leg3-upper-location-x);
-    top: var(--leg3-upper-location-y);
-    transform: rotate(var(--leg3-upper-angle));
+    transform: translate(var(--leg3-upper-location-x), var(--leg3-upper-location-y)) rotate(var(--leg3-upper-angle));
 }
 .spidertron-leg4-upper-wrapper {
-    left: var(--leg4-upper-location-x);
-    top: var(--leg4-upper-location-y);
-    transform: rotate(var(--leg4-upper-angle));
+    transform: translate(var(--leg4-upper-location-x), var(--leg4-upper-location-y)) rotate(var(--leg4-upper-angle));
 }
 .spidertron-leg5-upper-wrapper {
-    left: var(--leg5-upper-location-x);
-    top: var(--leg5-upper-location-y);
-    transform: rotate(var(--leg5-upper-angle));
+    transform: translate(var(--leg5-upper-location-x), var(--leg5-upper-location-y)) rotate(var(--leg5-upper-angle));
 }
 .spidertron-leg6-upper-wrapper {
-    left: var(--leg6-upper-location-x);
-    top: var(--leg6-upper-location-y);
-    transform: rotate(var(--leg6-upper-angle));
+    transform: translate(var(--leg6-upper-location-x), var(--leg6-upper-location-y)) rotate(var(--leg6-upper-angle));
 }
 .spidertron-leg7-upper-wrapper {
-    left: var(--leg7-upper-location-x);
-    top: var(--leg7-upper-location-y);
-    transform: rotate(var(--leg7-upper-angle));
+    transform: translate(var(--leg7-upper-location-x), var(--leg7-upper-location-y)) rotate(var(--leg7-upper-angle));
 }
 .spidertron-leg8-upper-wrapper {
-    left: var(--leg8-upper-location-x);
-    top: var(--leg8-upper-location-y);
-    transform: rotate(var(--leg8-upper-angle));
+    transform: translate(var(--leg8-upper-location-x), var(--leg8-upper-location-y)) rotate(var(--leg8-upper-angle));
 }
 
 .spidertron-leg1-upper { height: var(--leg1-upper-length); }
@@ -251,44 +237,28 @@ SOFTWARE.
 .spidertron-leg8-knee { transform: rotate(var(--leg8-knee-angle)); }
 
 .spidertron-leg1-lower-wrapper {
-    left: var(--leg1-lower-location-x);
-    top: var(--leg1-lower-location-y);
-    transform: rotate(var(--leg1-lower-angle));
+    transform: translate(var(--leg1-lower-location-x), var(--leg1-lower-location-y)) rotate(var(--leg1-lower-angle));
 }
 .spidertron-leg2-lower-wrapper {
-    left: var(--leg2-lower-location-x);
-    top: var(--leg2-lower-location-y);
-    transform: rotate(var(--leg2-lower-angle));
+    transform: translate(var(--leg2-lower-location-x), var(--leg2-lower-location-y)) rotate(var(--leg2-lower-angle));
 }
-.spidertron-leg3-lower-wrapper  {
-    left: var(--leg3-lower-location-x);
-    top: var(--leg3-lower-location-y);
-    transform: rotate(var(--leg3-lower-angle));
+.spidertron-leg3-lower-wrapper {
+    transform: translate(var(--leg3-lower-location-x), var(--leg3-lower-location-y)) rotate(var(--leg3-lower-angle));
 }
-.spidertron-leg4-lower-wrapper  {
-    left: var(--leg4-lower-location-x);
-    top: var(--leg4-lower-location-y);
-    transform: rotate(var(--leg4-lower-angle));
+.spidertron-leg4-lower-wrapper {
+    transform: translate(var(--leg4-lower-location-x), var(--leg4-lower-location-y)) rotate(var(--leg4-lower-angle));
 }
-.spidertron-leg5-lower-wrapper  {
-    left: var(--leg5-lower-location-x);
-    top: var(--leg5-lower-location-y);
-    transform: rotate(var(--leg5-lower-angle));
+.spidertron-leg5-lower-wrapper {
+    transform: translate(var(--leg5-lower-location-x), var(--leg5-lower-location-y)) rotate(var(--leg5-lower-angle));
 }
-.spidertron-leg6-lower-wrapper  {
-    left: var(--leg6-lower-location-x);
-    top: var(--leg6-lower-location-y);
-    transform: rotate(var(--leg6-lower-angle));
+.spidertron-leg6-lower-wrapper {
+    transform: translate(var(--leg6-lower-location-x), var(--leg6-lower-location-y)) rotate(var(--leg6-lower-angle));
 }
-.spidertron-leg7-lower-wrapper  {
-    left: var(--leg7-lower-location-x);
-    top: var(--leg7-lower-location-y);
-    transform: rotate(var(--leg7-lower-angle));
+.spidertron-leg7-lower-wrapper {
+    transform: translate(var(--leg7-lower-location-x), var(--leg7-lower-location-y)) rotate(var(--leg7-lower-angle));
 }
-.spidertron-leg8-lower-wrapper  {
-    left: var(--leg8-lower-location-x);
-    top: var(--leg8-lower-location-y);
-    transform: rotate(var(--leg8-lower-angle));
+.spidertron-leg8-lower-wrapper {
+    transform: translate(var(--leg8-lower-location-x), var(--leg8-lower-location-y)) rotate(var(--leg8-lower-angle));
 }
 
 .spidertron-leg1-lower { height: var(--leg1-lower-length); }
